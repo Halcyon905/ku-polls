@@ -12,7 +12,7 @@ class IndexView(generic.ListView):
 
     def get_queryset(self):
         """Return 5 last published questions. Not including ones set to publish in the future."""
-        return Question.objects.filter(pub_date__lte=timezone.now()).order_by('-pub_date')[:5]
+        return Question.objects.filter(pub_date__lte=timezone.localtime()).order_by('-pub_date')[:5]
 
 
 class DetailView(generic.DetailView):
@@ -23,7 +23,7 @@ class DetailView(generic.DetailView):
         """
         Excludes any questions that aren't published yet.
         """
-        return Question.objects.filter(pub_date__lte=timezone.now())
+        return Question.objects.filter(pub_date__lte=timezone.localtime())
 
 
 class ResultsView(generic.DetailView):
