@@ -16,7 +16,7 @@ class Question(models.Model):
     @admin.display(
         boolean=True,
         ordering='pub_date',
-        description='Published recently?',
+        description='Within voting period',
     )
     def can_vote(self):
         """Return boolean whether voting is allowed."""
