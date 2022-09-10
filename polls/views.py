@@ -25,6 +25,15 @@ class DetailView(generic.DetailView):
         """
         return Question.objects.filter(pub_date__lte=timezone.localtime())
 
+    def get(self, request, pk):
+        """
+        Return detail page if can_vote method returns True. If not then redirect to results page.
+        """
+        question = get_object_or_404(Question, pk=pk)
+        if question.can_vote():
+            return render(request, 'polls/detail.html', {'question': question})
+        return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+
 
 class ResultsView(generic.DetailView):
     model = Question
