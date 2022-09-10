@@ -177,7 +177,7 @@ class QuestionResultsViewTests(TestCase):
         c1 = question1.choice_set.create(choice_text='Yes', votes=1)
         c2 = question1.choice_set.create(choice_text='No', votes=0)
         response = self.client.get(reverse('polls:results', args=(question1.id,)))
-        yes_count = response.context_data['question'].choice_set.get(pk=1).votes
-        no_count = response.context_data['question'].choice_set.get(pk=2).votes
+        yes_count = response.context.dicts[3]['question'].choice_set.get(pk=1).votes
+        no_count = response.context.dicts[3]['question'].choice_set.get(pk=2).votes
         self.assertEqual(yes_count, 1)
         self.assertEqual(no_count, 0)
