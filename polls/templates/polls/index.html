@@ -9,6 +9,7 @@
         {% else %}
             <li><a href="{% url 'polls:results' question.id %}">{{ question.question_text }}</a></li>
         {% endif %}
+        <li><a href="{% url 'polls:results' question.id %}"><button type="button">{{"Results"}}</button></a></li>
     {% endfor %}
     </ul>
 {% else %}
