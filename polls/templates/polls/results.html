@@ -3,10 +3,27 @@
 
 <h1>{{ question.question_text }}</h1>
 
-<ul>
-{% for choice in question.choice_set.all %}
-    <li>{{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}</li>
-{% endfor %}
-</ul>
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags %} {% endif %} {{ message }} <br>
+    {% endfor %}
+{% endif %}
 
-<a href="{% url 'polls:detail' question.id %}">Vote again?</a>
+<table class="vote">
+        <thead>
+        <th><u>Choice</u></th>
+        <th></th>
+        </thead>
+        <tbody>
+        {% for choice in question.choice_set.all %}
+            <tr>
+                <th>{{ choice.choice_text }}</th>
+                <td>{{ choice.votes }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+</table>
+
+<a href="{% url 'polls:index' %}">
+<button type="button">{{"Back to Polls list"}}</button>
+</a>

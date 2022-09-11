@@ -1,3 +1,29 @@
 body {
     background: white url("images/background.png") no-repeat;
+    font-family: sans-serif;
+    text-align: left;
+}
+
+.questions {
+  border-collapse: collapse;
+  text-align: left;
+}
+.questions caption {
+  font-size: 25px
+}
+.questions th, .questions td {
+  border: 2px solid black;
+  padding: 8px;
+}
+.questions td:nth-child(3) {
+  text-align: center;
+}
+
+.vote {
+  width: 250px;
+  text-align: left;
+  padding: 20px;
+}
+.vote td:nth-child(2) {
+  text-align: right;
 }
