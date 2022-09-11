@@ -1,3 +1,4 @@
+"""This module contains the Question and Choice models."""
 import datetime
 from django.db import models
 from django.utils import timezone
@@ -5,12 +6,14 @@ from django.contrib import admin
 
 
 class Question(models.Model):
+    """Question model for creating questions."""
+
     question_text = models.CharField(max_length=200)
     pub_date = models.DateTimeField('date published')
     end_date = models.DateTimeField('date ending', null=True, default=None)
 
     def __str__(self):
-        """Return readable string"""
+        """Return readable string."""
         return self.question_text
 
     @admin.display(
@@ -37,10 +40,12 @@ class Question(models.Model):
 
 
 class Choice(models.Model):
+    """Choice model for creating choices."""
+
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     choice_text = models.CharField(max_length=200)
     votes = models.IntegerField(default=0)
 
     def __str__(self):
-        """Return readable string"""
+        """Return readable string."""
         return self.choice_text
