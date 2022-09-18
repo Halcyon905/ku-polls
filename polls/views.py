@@ -53,11 +53,11 @@ class DetailView(generic.DetailView):
             messages.error(request, 'Access to question denied.')
             return HttpResponseRedirect(reverse('polls:index'))
         if question.can_vote():
-            check = ''
-            vote_info = Vote.objects.filter(user=user)
-            for selection in vote_info:
-                if selection.question == question:
-                    check = selection.choice.choice_text
+            try:
+                vote_info = Vote.objects.get(user=user, choice__in=question.choice_set.all())
+                check = vote_info.choice.choice_text
+            except Vote.DoesNotExist:
+                check = ''
             return render(request, 'polls/detail.html', {'question': question,
                                                          'check': check})
         elif question.is_published():
@@ -101,11 +101,10 @@ def vote(request, question_id):
         })
     else:
         # check if user has voted in question before
-        vote_info = Vote.objects.filter(user=user)
-        for selection in vote_info:
-            if selection.question == question:
-                selection.choice = selected_choice
-                selection.save()
-                return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
-        Vote.objects.create(choice=selected_choice, user=user).save()
+        try:
+            vote_info = Vote.objects.get(user=user, choice__in=question.choice_set.all())
+            vote_info.choice = selected_choice
+            vote_info.save()
+        except Vote.DoesNotExist:
+            Vote.objects.create(choice=selected_choice, user=user).save()
         return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
