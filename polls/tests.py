@@ -4,7 +4,8 @@ from django.test import TestCase
 from django.utils import timezone
 from django.urls import reverse
 
-from .models import Question
+from .models import Question, Vote
+from django.contrib.auth.models import User
 
 
 def create_question(question_text, days=0, end=1):
@@ -82,6 +83,13 @@ class QuestionModelTests(TestCase):
 
 class QuestionIndexViewTests(TestCase):
 
+    def setUp(self) -> None:
+        """Setup before running tests."""
+        self.user = User.objects.create(username='test_person')
+        self.user.set_password('12345')
+        self.user.save()
+        self.logged_in = self.client.login(username='test_person', password='12345')
+
     def test_no_questions(self):
         """
         If no questions exist, an appropriate message is displayed.
@@ -102,6 +110,12 @@ class QuestionIndexViewTests(TestCase):
             response.context['latest_question_list'],
             [question],
         )
+
+    def test_anyone_can_see_polls_list(self):
+        """Users can see the polls list without logging in."""
+        self.client.logout()
+        response = self.client.get(reverse('polls:index'))
+        self.assertEqual(response.status_code, 200)
 
     def test_future_question(self):
         """
@@ -141,6 +155,13 @@ class QuestionIndexViewTests(TestCase):
 
 class QuestionDetailViewTests(TestCase):
 
+    def setUp(self) -> None:
+        """Setup before running tests."""
+        self.user = User.objects.create(username='test_person')
+        self.user.set_password('12345')
+        self.user.save()
+        self.logged_in = self.client.login(username='test_person', password='12345')
+
     def test_future_question(self):
         """
         The detail view of a question with a pub_date in the future
@@ -152,10 +173,7 @@ class QuestionDetailViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_past_question(self):
-        """
-        The detail view of a question with a pub_date in the past
-        displays the question's text.
-        """
+        """The detail view of a question with a pub_date in the past displays the question's text."""
         past_question = create_question(question_text='Past Question.', days=-5, end=10)
         url = reverse('polls:detail', args=(past_question.id,))
         response = self.client.get(url)
@@ -170,19 +188,60 @@ class QuestionDetailViewTests(TestCase):
 
 class QuestionResultsViewTests(TestCase):
 
+    def setUp(self) -> None:
+        """Setup before running tests."""
+        self.user = User.objects.create(username='test_person')
+        self.user.set_password('12345')
+        self.user.save()
+        self.logged_in = self.client.login(username='test_person', password='12345')
+
     def test_voting_count(self):
         """Test that the app count and displays the correct amount of votes for each choice."""
         question1 = create_question(question_text="test question 1.", days=-1, end=5)
-        c1 = question1.choice_set.create(choice_text='Yes', votes=1)
-        c2 = question1.choice_set.create(choice_text='No', votes=0)
-        response = self.client.get(reverse('polls:results', args=(question1.id,)))
-        yes_count = response.context.dicts[3]['question'].choice_set.get(pk=1).votes
-        no_count = response.context.dicts[3]['question'].choice_set.get(pk=2).votes
-        self.assertEqual(yes_count, 1)
-        self.assertEqual(no_count, 0)
+        c1 = question1.choice_set.create(choice_text='Yes')
+        Vote.objects.create(choice=c1, user=self.user)
+        self.assertEqual(1, c1.votes())
 
     def test_future_pub_date_question(self):
         """Access to results of unpublished questions should be redirected to index page."""
         question1 = create_question(question_text="test question 1.", days=5)
         response = self.client.get(reverse('polls:results', args=(question1.id,)))
         self.assertEqual(response.status_code, 302)
+
+    def test_anyone_can_see_result(self):
+        """Anyone can see the results page of a question."""
+        self.client.logout()
+        question1 = create_question(question_text="test question 1.", days=-1)
+        response = self.client.get(reverse('polls:results', args=(question1.id,)))
+        self.assertEqual(response.status_code, 200)
+
+
+class QuestionVoteViewTest(TestCase):
+
+    def setUp(self) -> None:
+        """Setup before running tests."""
+        self.user = User.objects.create(username='test_person')
+        self.user.set_password('12345')
+        self.user.save()
+        self.logged_in = self.client.login(username='test_person', password='12345')
+
+    def test_only_authenticated_users_can_vote(self):
+        """Only authenticated users can vote. If not they are redirected"""
+        question1 = create_question("test_question1", days=-2)
+        response = self.client.post(reverse('polls:vote', args=(question1.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.client.logout()
+        response = self.client.post(reverse('polls:vote', args=(question1.id,)))
+        self.assertEqual(response.status_code, 302)
+
+    def test_one_person_one_vote(self):
+        """One user can vote once per question."""
+        question1 = create_question("test_question1", days=-2)
+        c1 = question1.choice_set.create(choice_text="yes")
+        c2 = question1.choice_set.create(choice_text="no")
+        response = self.client.post(reverse('polls:vote', args=(question1.id,)), {'choice': c1.id})
+        self.assertEqual(Vote.objects.get(user=self.user, choice__in=question1.choice_set.all()).choice, c1)
+        self.assertEqual(Vote.objects.all().count(), 1)
+        response = self.client.post(reverse('polls:vote', args=(question1.id,)), {'choice': c2.id})
+        self.assertEqual(Vote.objects.get(user=self.user, choice__in=question1.choice_set.all()).choice, c2)
+        self.assertEqual(Vote.objects.all().count(), 1)
