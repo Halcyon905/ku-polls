@@ -18,6 +18,14 @@ class IndexView(generic.ListView):
         """Return 5 last published questions. Not including ones set to publish in the future."""
         return Question.objects.filter(pub_date__lte=timezone.localtime()).order_by('-pub_date')[:5]
 
+    def get(self, request):
+        """Return HttpResponse object contain the index page."""
+        if request.user.is_anonymous:
+            return render(request, 'polls/index.html', context={"latest_question_list": self.get_queryset(),
+                                                                "username": "Not currently logged in."})
+        return render(request, 'polls/index.html', context={"latest_question_list": self.get_queryset(),
+                                                            "username": "Logged in as " + request.user.username})
+
 
 class DetailView(generic.DetailView):
     """Detail page of application."""
