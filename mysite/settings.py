@@ -52,6 +52,13 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+AUTHENTICATION_BACKENDS = [
+    # username/password authentication
+    "django.contrib.auth.backends.ModelBackend",
+]
+LOGIN_REDIRECT_URL = '/polls/'
+LOGOUT_REDIRECT_URL = '/polls/'
+
 ROOT_URLCONF = "mysite.urls"
 
 TEMPLATES = [

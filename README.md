@@ -6,6 +6,12 @@ with additional functionality.
 ## How to install and run.
 to be added in the near future.
 
+## Demo Users
+| Username |  password  |
+|----------|------------|
+| test123  | thisisfine |
+| person1  | hello123   |
+
 ##  Project Documents
 
 All project documents are in the [Project Wiki](../../wiki/Home)
