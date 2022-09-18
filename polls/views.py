@@ -44,13 +44,20 @@ class DetailView(generic.DetailView):
         Return detail page if can_vote method returns True. If not then but question is published redirect to results
         page. If question not yet published, redirect to index page.
         """
+        user = request.user
         try:
             question = Question.objects.get(pk=pk)
         except (KeyError, Question.DoesNotExist):
             messages.error(request, 'Access to question denied.')
             return HttpResponseRedirect(reverse('polls:index'))
         if question.can_vote():
-            return render(request, 'polls/detail.html', {'question': question})
+            check = ''
+            vote_info = Vote.objects.filter(user=user)
+            for selection in vote_info:
+                if selection.question == question:
+                    check = selection.choice.choice_text
+            return render(request, 'polls/detail.html', {'question': question,
+                                                         'check': check})
         elif question.is_published():
             messages.error(request, 'Voting period is closed for this question.')
             return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
@@ -91,14 +98,12 @@ def vote(request, question_id):
             'error_message': "You didn't select a choice.",
         })
     else:
-        try:
-            vote_info = Vote.objects.filter(user=user)
-            for selection in vote_info:
-                if selection.question == question:
-                    selection.choice = selected_choice
-                    selection.save()
-                    return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
-            raise Vote.DoesNotExist
-        except Vote.DoesNotExist:
-            Vote.objects.create(choice=selected_choice, user=user).save()
+        # check if user has voted in question before
+        vote_info = Vote.objects.filter(user=user)
+        for selection in vote_info:
+            if selection.question == question:
+                selection.choice = selected_choice
+                selection.save()
+                return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+        Vote.objects.create(choice=selected_choice, user=user).save()
         return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
