@@ -3,7 +3,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views import generic
-from .models import Question, Choice
+from .models import Question, Choice, Vote
 from django.utils import timezone
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -81,6 +81,7 @@ class ResultsView(generic.DetailView):
 def vote(request, question_id):
     """Add vote to choice of the current question."""
     question = get_object_or_404(Question, pk=question_id)
+    user = request.user
     try:
         selected_choice = question.choice_set.get(pk=request.POST['choice'])
     except (KeyError, Choice.DoesNotExist):
@@ -90,9 +91,14 @@ def vote(request, question_id):
             'error_message': "You didn't select a choice.",
         })
     else:
-        selected_choice.votes += 1
-        selected_choice.save()
-        # Always return an HttpResponseRedirect after successfully dealing
-        # with POST data. This prevents data from being posted twice if a
-        # user hits the Back button.
+        try:
+            vote_info = Vote.objects.filter(user=user)
+            for selection in vote_info:
+                if selection.question == question:
+                    selection.choice = selected_choice
+                    selection.save()
+                    return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+            raise Vote.DoesNotExist
+        except Vote.DoesNotExist:
+            Vote.objects.create(choice=selected_choice, user=user).save()
         return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
