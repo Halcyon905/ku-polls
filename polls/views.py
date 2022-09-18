@@ -1,6 +1,6 @@
 """This module contains the views of each page of the application."""
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.views import generic
 from .models import Question, Choice, Vote
@@ -44,6 +44,8 @@ class DetailView(generic.DetailView):
         Return detail page if can_vote method returns True. If not then but question is published redirect to results
         page. If question not yet published, redirect to index page.
         """
+        if request.user.is_anonymous:
+            return redirect(to='http://127.0.0.1:8000/accounts/login')
         user = request.user
         try:
             question = Question.objects.get(pk=pk)
