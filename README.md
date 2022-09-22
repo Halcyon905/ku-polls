@@ -6,6 +6,11 @@ with additional functionality.
 ## How to install and run.
 to be added in the near future.
 
+## Demo Admin
+| Username | password |
+|----------|----------|
+| Admin    | ilikeisp |
+
 ## Demo Users
 | Username |  password  |
 |----------|------------|
