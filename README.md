@@ -4,7 +4,38 @@ An application for conducting surveys, written in Python using django. This proj
 with additional functionality.
 
 ## How to install and run.
-to be added in the near future.
+In order to install the application:
+1. clone the repo into desired directory
+2. find the directory in terminal and run 
+    ```sh
+    python -m venv env
+    ```
+3. then run
+    ```sh
+    . env/Scripts/activate
+    ```
+4. then to install the requirements run
+    ```sh
+    pip install -r requirements.txt
+    ```
+5. exit the environment then use
+    ```sh
+    deactivate
+    ```
+7. then to create the database run 
+    ```sh
+    python manage.py migrate
+    ```
+8. finally, to load the data run 
+    ```sh
+    python manage.py loaddata data/polls.json data/users.json
+    ```
+
+In order to run the application, run the command:
+```sh
+python manage.py runserver
+```
+then you can go to `http://127.0.0.1:8000/` or `http://127.0.0.1:8000/polls` to use the web application.
 
 ## Demo Admin
 | Username | password |
