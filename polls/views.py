@@ -16,16 +16,25 @@ class IndexView(generic.ListView):
     context_object_name = 'latest_question_list'
 
     def get_queryset(self):
-        """Return 5 last published questions. Not including ones set to publish in the future."""
-        return Question.objects.filter(pub_date__lte=timezone.localtime()).order_by('-pub_date')[:5]
+        """
+        Return 5 last published questions. Not including
+        ones set to publish in the future.
+        """
+        return Question.objects.filter(
+            pub_date__lte=timezone.localtime()).order_by('-pub_date')[:5]
 
     def get(self, request):
         """Return HttpResponse object contain the index page."""
         if request.user.is_anonymous:
-            return render(request, 'polls/index.html', context={"latest_question_list": self.get_queryset(),
-                                                                "username": "Not currently logged in."})
-        return render(request, 'polls/index.html', context={"latest_question_list": self.get_queryset(),
-                                                            "username": "Logged in as " + request.user.username})
+            return render(request,
+                          'polls/index.html',
+                          context={"latest_question_list": self.get_queryset(),
+                                   "username": "Not currently logged in."})
+        return render(request,
+                      'polls/index.html',
+                      context={"latest_question_list": self.get_queryset(),
+                               "username": "Logged in as "
+                                           + request.user.username})
 
 
 class DetailView(generic.DetailView):
@@ -41,8 +50,9 @@ class DetailView(generic.DetailView):
     def get(self, request, pk):
         """Return different pages in accordance to can_vote and is_published.
 
-        Return detail page if can_vote method returns True. If not then but question is published redirect to results
-        page. If question not yet published, redirect to index page.
+        Return detail page if can_vote method returns True. If not then but
+        question is published redirect to results page. If question not
+        yet published, redirect to index page.
         """
         if request.user.is_anonymous:
             return redirect(to='http://127.0.0.1:8000/accounts/login')
@@ -54,15 +64,19 @@ class DetailView(generic.DetailView):
             return HttpResponseRedirect(reverse('polls:index'))
         if question.can_vote():
             try:
-                vote_info = Vote.objects.get(user=user, choice__in=question.choice_set.all())
+                vote_info = \
+                    Vote.objects.get(user=user,
+                                     choice__in=question.choice_set.all())
                 check = vote_info.choice.choice_text
             except Vote.DoesNotExist:
                 check = ''
             return render(request, 'polls/detail.html', {'question': question,
                                                          'check': check})
         elif question.is_published():
-            messages.error(request, 'Voting period is closed for this question.')
-            return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+            messages.error(request,
+                           'Voting period is closed for this question.')
+            return HttpResponseRedirect(reverse('polls:results',
+                                                args=(question.id,)))
         messages.error(request, 'Access to question denied.')
         return HttpResponseRedirect(reverse('polls:index'))
 
@@ -74,14 +88,18 @@ class ResultsView(generic.DetailView):
     template_name = 'polls/results.html'
 
     def get(self, request, pk):
-        """Return result page if can_vote method returns True. If not then redirect to results page."""
+        """
+        Return result page if can_vote method returns True.
+        If not then redirect to results page.
+        """
         try:
             question = Question.objects.get(pk=pk)
         except (KeyError, Question.DoesNotExist):
             messages.error(request, 'Access to question denied.')
             return HttpResponseRedirect(reverse('polls:index'))
         if question.is_published():
-            return render(request, 'polls/results.html', {'question': question})
+            return render(request, 'polls/results.html',
+                          {'question': question})
         messages.error(request, 'Access to question denied.')
         return HttpResponseRedirect(reverse('polls:index'))
 
@@ -102,9 +120,11 @@ def vote(request, question_id):
     else:
         # check if user has voted in question before
         try:
-            vote_info = Vote.objects.get(user=user, choice__in=question.choice_set.all())
+            vote_info = Vote.objects.get(user=user,
+                                         choice__in=question.choice_set.all())
             vote_info.choice = selected_choice
             vote_info.save()
         except Vote.DoesNotExist:
             Vote.objects.create(choice=selected_choice, user=user).save()
-        return HttpResponseRedirect(reverse('polls:results', args=(question.id,)))
+        return HttpResponseRedirect(reverse('polls:results',
+                                            args=(question.id,)))

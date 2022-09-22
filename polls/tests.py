@@ -1,3 +1,4 @@
+"""This module contains the tests for the polls.models."""
 import datetime
 
 from django.test import TestCase
@@ -16,8 +17,11 @@ def create_question(question_text, days=0, end=1):
     """
     time1 = timezone.localtime() + datetime.timedelta(days=days)
     # plus milliseconds for more consistent tests
-    time2 = timezone.localtime() + datetime.timedelta(days=days + end, milliseconds=50)
-    return Question.objects.create(question_text=question_text, pub_date=time1, end_date=time2)
+    time2 = timezone.localtime() + datetime.timedelta(days=days + end,
+                                                      milliseconds=50)
+    return Question.objects.create(question_text=question_text,
+                                   pub_date=time1,
+                                   end_date=time2)
 
 
 class QuestionModelTests(TestCase):
@@ -45,34 +49,46 @@ class QuestionModelTests(TestCase):
         was_published_recently() returns True for questions whose pub_date
         is within the last day.
         """
-        time = timezone.localtime() - datetime.timedelta(hours=23, minutes=59, seconds=59)
+        time = timezone.localtime() - datetime.timedelta(hours=23,
+                                                         minutes=59,
+                                                         seconds=59)
         recent_question = Question(pub_date=time)
         self.assertIs(recent_question.was_published_recently(), True)
 
     def test_can_vote_within_publish_and_end_date(self):
-        """can_vote of Questions within voting period returns True. False otherwise."""
-        question = create_question(question_text="test question 1.", days=-1, end=2)
+        """
+        can_vote of Questions within voting period returns True.
+        False otherwise.
+        """
+        question = create_question(question_text="test question 1.",
+                                   days=-1, end=2)
         self.assertIs(question.can_vote(), True)
 
     def test_can_vote_after_end_date(self):
         """If pub_date and end_date has passed then voting is not allowed."""
-        question = create_question(question_text="test question 1.", days=-2)
+        question = create_question(question_text="test question 1.",
+                                   days=-2)
         self.assertIs(question.can_vote(), False)
 
     def test_can_vote_without_end_date(self):
-        """If published date has passed without end_date then voting is allowed."""
+        """
+        If published date has passed without end_date then voting is allowed.
+        """
         pub_time = timezone.localtime() - datetime.timedelta(1)
-        question = Question(question_text="test question 1.", pub_date=pub_time)
+        question = Question(question_text="test question 1.",
+                            pub_date=pub_time)
         self.assertIs(question.can_vote(), True)
 
     def test_can_vote_with_pub_date_in_future(self):
         """If pub_date is in the future then voting is not allowed."""
-        question = create_question(question_text="test question 1.", days=1)
+        question = create_question(question_text="test question 1.",
+                                   days=1)
         self.assertIs(question.can_vote(), False)
 
     def test_can_vote_with_current_time_as_end_date(self):
         """If end_date is exactly the current time, voting is not allowed."""
-        question = create_question(question_text="test question 1.", days=-1)
+        question = create_question(question_text="test question 1.",
+                                   days=-1)
         self.assertIs(question.can_vote(), True)
 
     def test_can_vote_with_current_time_as_pub_date(self):
@@ -88,7 +104,8 @@ class QuestionIndexViewTests(TestCase):
         self.user = User.objects.create(username='test_person')
         self.user.set_password('12345')
         self.user.save()
-        self.logged_in = self.client.login(username='test_person', password='12345')
+        self.logged_in = self.client.login(username='test_person',
+                                           password='12345')
 
     def test_no_questions(self):
         """
@@ -104,7 +121,8 @@ class QuestionIndexViewTests(TestCase):
         Questions with a pub_date in the past are displayed on the
         index page.
         """
-        question = create_question(question_text="Past question.", days=-30)
+        question = create_question(question_text="Past question.",
+                                   days=-30)
         response = self.client.get(reverse('polls:index'))
         self.assertQuerysetEqual(
             response.context['latest_question_list'],
@@ -132,8 +150,10 @@ class QuestionIndexViewTests(TestCase):
         Even if both past and future questions exist, only past questions
         are displayed.
         """
-        question = create_question(question_text="Past question.", days=-30)
-        create_question(question_text="Future question.", days=30)
+        question = create_question(question_text="Past question.",
+                                   days=-30)
+        create_question(question_text="Future question.",
+                        days=30)
         response = self.client.get(reverse('polls:index'))
         self.assertQuerysetEqual(
             response.context['latest_question_list'],
@@ -144,8 +164,10 @@ class QuestionIndexViewTests(TestCase):
         """
         The questions index page may display multiple questions.
         """
-        question1 = create_question(question_text="Past question 1.", days=-30)
-        question2 = create_question(question_text="Past question 2.", days=-5)
+        question1 = create_question(question_text="Past question 1.",
+                                    days=-30)
+        question2 = create_question(question_text="Past question 2.",
+                                    days=-5)
         response = self.client.get(reverse('polls:index'))
         self.assertQuerysetEqual(
             response.context['latest_question_list'],
@@ -160,29 +182,40 @@ class QuestionDetailViewTests(TestCase):
         self.user = User.objects.create(username='test_person')
         self.user.set_password('12345')
         self.user.save()
-        self.logged_in = self.client.login(username='test_person', password='12345')
+        self.logged_in = self.client.login(username='test_person',
+                                           password='12345')
 
     def test_future_question(self):
         """
         The detail view of a question with a pub_date in the future
         returns a 302 not found.
         """
-        future_question = create_question(question_text='Future question.', days=5)
+        future_question = create_question(question_text='Future question.',
+                                          days=5)
         url = reverse('polls:detail', args=(future_question.id,))
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
 
     def test_past_question(self):
-        """The detail view of a question with a pub_date in the past displays the question's text."""
-        past_question = create_question(question_text='Past Question.', days=-5, end=10)
+        """
+        The detail view of a question with a pub_date in the
+        past displays the question's text.
+        """
+        past_question = create_question(question_text='Past Question.',
+                                        days=-5, end=10)
         url = reverse('polls:detail', args=(past_question.id,))
         response = self.client.get(url)
         self.assertContains(response, past_question.question_text)
 
     def test_closed_voting_period_question(self):
-        """If both pub_date and end_date has passed then redirect to results page."""
-        past_question = create_question(question_text='Past Question.', days=-5)
-        response = self.client.get(reverse('polls:detail', args=(past_question.id,)))
+        """
+        If both pub_date and end_date has passed
+        then redirect to results page.
+        """
+        past_question = create_question(question_text='Past Question.',
+                                        days=-5)
+        response = self.client.get(reverse('polls:detail',
+                                           args=(past_question.id,)))
         self.assertEqual(response.status_code, 302)
 
 
@@ -193,26 +226,38 @@ class QuestionResultsViewTests(TestCase):
         self.user = User.objects.create(username='test_person')
         self.user.set_password('12345')
         self.user.save()
-        self.logged_in = self.client.login(username='test_person', password='12345')
+        self.logged_in = self.client.login(username='test_person',
+                                           password='12345')
 
     def test_voting_count(self):
-        """Test that the app count and displays the correct amount of votes for each choice."""
-        question1 = create_question(question_text="test question 1.", days=-1, end=5)
+        """
+        Test that the app count and displays
+        the correct amount of votes for each choice.
+        """
+        question1 = create_question(question_text="test question 1.",
+                                    days=-1, end=5)
         c1 = question1.choice_set.create(choice_text='Yes')
         Vote.objects.create(choice=c1, user=self.user)
         self.assertEqual(1, c1.votes())
 
     def test_future_pub_date_question(self):
-        """Access to results of unpublished questions should be redirected to index page."""
-        question1 = create_question(question_text="test question 1.", days=5)
-        response = self.client.get(reverse('polls:results', args=(question1.id,)))
+        """
+        Access to results of unpublished questions
+        should be redirected to index page.
+        """
+        question1 = create_question(question_text="test question 1.",
+                                    days=5)
+        response = self.client.get(reverse('polls:results',
+                                           args=(question1.id,)))
         self.assertEqual(response.status_code, 302)
 
     def test_anyone_can_see_result(self):
         """Anyone can see the results page of a question."""
         self.client.logout()
-        question1 = create_question(question_text="test question 1.", days=-1)
-        response = self.client.get(reverse('polls:results', args=(question1.id,)))
+        question1 = create_question(question_text="test question 1.",
+                                    days=-1)
+        response = self.client.get(reverse('polls:results',
+                                           args=(question1.id,)))
         self.assertEqual(response.status_code, 200)
 
 
@@ -223,15 +268,21 @@ class QuestionVoteViewTest(TestCase):
         self.user = User.objects.create(username='test_person')
         self.user.set_password('12345')
         self.user.save()
-        self.logged_in = self.client.login(username='test_person', password='12345')
+        self.logged_in = self.client.login(username='test_person',
+                                           password='12345')
 
     def test_only_authenticated_users_can_vote(self):
-        """Only authenticated users can vote. If not they are redirected"""
+        """
+        Only authenticated users can vote.
+        If not they are redirected.
+        """
         question1 = create_question("test_question1", days=-2)
-        response = self.client.post(reverse('polls:vote', args=(question1.id,)))
+        response = self.client.post(reverse('polls:vote',
+                                            args=(question1.id,)))
         self.assertEqual(response.status_code, 200)
         self.client.logout()
-        response = self.client.post(reverse('polls:vote', args=(question1.id,)))
+        response = self.client.post(reverse('polls:vote',
+                                            args=(question1.id,)))
         self.assertEqual(response.status_code, 302)
 
     def test_one_person_one_vote(self):
@@ -239,9 +290,15 @@ class QuestionVoteViewTest(TestCase):
         question1 = create_question("test_question1", days=-2)
         c1 = question1.choice_set.create(choice_text="yes")
         c2 = question1.choice_set.create(choice_text="no")
-        response = self.client.post(reverse('polls:vote', args=(question1.id,)), {'choice': c1.id})
-        self.assertEqual(Vote.objects.get(user=self.user, choice__in=question1.choice_set.all()).choice, c1)
+        self.client.post(reverse('polls:vote', args=(question1.id,)),
+                         {'choice': c1.id})
+        selected = Vote.objects.get(user=self.user,
+                                    choice__in=question1.choice_set.all())
+        self.assertEqual(selected.choice, c1)
         self.assertEqual(Vote.objects.all().count(), 1)
-        response = self.client.post(reverse('polls:vote', args=(question1.id,)), {'choice': c2.id})
-        self.assertEqual(Vote.objects.get(user=self.user, choice__in=question1.choice_set.all()).choice, c2)
+        self.client.post(reverse('polls:vote', args=(question1.id,)),
+                         {'choice': c2.id})
+        selected = Vote.objects.get(user=self.user,
+                                    choice__in=question1.choice_set.all())
+        self.assertEqual(selected.choice, c2)
         self.assertEqual(Vote.objects.all().count(), 1)
