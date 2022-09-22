@@ -22,6 +22,8 @@ In order to install the application:
     ```sh
     deactivate
     ```
+6. Now you need to create a ```.env``` file in the project directory. Follow the example file called
+sample.env. To generate a secret key go to [this site](https://djecrety.ir/)
 7. then to create the database run 
     ```sh
     python manage.py migrate
