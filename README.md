@@ -1,6 +1,7 @@
 # ku-polls: an Online poll for Kasetsart University
 
 [![build](https://github.com/Halcyon905/ku-polls/actions/workflows/python-app.yml/badge.svg)](https://github.com/Halcyon905/ku-polls/actions/workflows/python-app.yml)
+[![codecov](https://codecov.io/gh/Halcyon905/ku-polls/branch/main/graph/badge.svg?token=3CTQ6LKAQP)](https://codecov.io/gh/Halcyon905/ku-polls)
 
 An application for conducting surveys, written in Python using django. This project is based off of [Django Tutorial project][django-tutorial],
 with additional functionality.
