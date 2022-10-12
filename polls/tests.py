@@ -218,6 +218,18 @@ class QuestionDetailViewTests(TestCase):
                                            args=(past_question.id,)))
         self.assertEqual(response.status_code, 302)
 
+    def test_no_user_logged_in(self):
+        """If the user is not logged in then redirect to login page."""
+        self.client.logout()
+        question = create_question(question_text='question.', days=-5)
+        response = self.client.get(reverse('polls:detail', args=(question.id,)))
+        self.assertEqual(response.status_code, 302)
+
+    def test_question_does_not_exist(self):
+        """Trying to go to a question that does not exist redirects to Index page."""
+        response = self.client.get(reverse('polls:detail', args=(10,)))
+        self.assertEqual(response.status_code, 302)
+
 
 class QuestionResultsViewTests(TestCase):
 
@@ -259,6 +271,11 @@ class QuestionResultsViewTests(TestCase):
         response = self.client.get(reverse('polls:results',
                                            args=(question1.id,)))
         self.assertEqual(response.status_code, 200)
+
+    def test_question_does_not_exist(self):
+        """Trying to go to a question that does not exist redirects to Index page."""
+        response = self.client.get(reverse('polls:results', args=(10,)))
+        self.assertEqual(response.status_code, 302)
 
 
 class QuestionVoteViewTest(TestCase):
